@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suthsayer | Prediction Market</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=MedievalSharp&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    
+    <style>
+        :root {
+            --dark-red: #580000; --blood-red: #8b0000; --dark-gray: #0d0d0d;
+            --deep-blue: #001a33; --gold: #c5a059; --stone: #2c2c2c; --ssyr-cyan: #00f2ff;
+        }
+        body { background-color: var(--dark-gray); color: #d1d1d1; font-family: 'Roboto', sans-serif; background-image: url('https://www.transparenttextures.com/patterns/asfalt-dark.png'); }
+        h1, h2, h3, .nav-link { font-family: 'Cinzel', serif; text-transform: uppercase; letter-spacing: 2px; }
+        .navbar { background: rgba(0,0,0,0.95); border-bottom: 2px solid var(--dark-red); z-index: 1000; }
+        .hero-section { padding: 100px 0 60px; text-align: center; border-bottom: 5px double var(--dark-red); background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1519074063912-ad2fe3f51908?auto=format&fit=crop&q=80&w=1600'); background-size: cover; }
+        .prophecy-box { background: #151515; border: 1px solid var(--stone); border-left: 4px solid var(--blood-red); margin-bottom: 30px; transition: 0.3s; }
+        .bsky-header { padding: 20px; background: rgba(255,255,255,0.02); border-bottom: 1px solid #222; }
+        .bsky-handle { font-family: 'MedievalSharp'; color: var(--gold); text-decoration: none; }
+        .market-stats { display: grid; grid-template-columns: repeat(4, 1fr); padding: 15px 20px; background: #0a0a0a; border-bottom: 1px solid var(--stone); text-align: center; }
+        .stat-label { font-size: 0.65rem; color: #666; text-transform: uppercase; display: block; }
+        .stat-value { font-family: 'MedievalSharp'; font-size: 1.1rem; color: #fff; }
+        .trade-buttons { display: flex; }
+        .btn-market { flex: 1; padding: 15px; border: none; font-family: 'Cinzel'; font-weight: bold; transition: 0.2s; }
+        .btn-yes { background: #1a3a1a; color: #44ff44; }
+        .btn-no { background: #3a1a1a; color: #ff4444; }
+        .btn-stake { background: var(--deep-blue); color: var(--ssyr-cyan); border-left: 1px solid var(--stone); }
+        .btn-connect { background: var(--dark-red); color: var(--gold); border: 1px solid var(--gold); font-family: 'MedievalSharp'; }
+        #wallet-address { font-size: 0.7rem; color: var(--gold); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar sticky-top">
+        <div class="container d-flex justify-content-between">
+            <a class="navbar-brand" href="#" style="color:var(--gold)">SUTH$AYER</a>
+            <div class="d-flex align-items-center">
+                <span id="wallet-address" class="me-3"></span>
+                <button id="connectBtn" class="btn btn-connect btn-sm" onclick="connectWallet()">Connect Pouch</button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="container">
+            <h1 style="color:var(--blood-red); font-size: 3.5rem;">The Oracle Awakens</h1>
+            <p class="lead">Powered by Bluesky and Chainlink</p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="prophecy-box">
+                    <div class="bsky-header">
+                        <a href="#" class="bsky-handle">@DeckardCain.bsky.social</a>
+                        <p class="mt-2 italic">"I predict the Sonic Mainnet will process 1M transactions in its first hour. Stake your claim!"</p>
+                    </div>
+                    <div class="market-stats">
+                        <div><span class="stat-label">Odds</span><span class="stat-value">65%</span></div>
+                        <div><span class="stat-label">Liquidity</span><span class="stat-value">10k USDC</span></div>
+                        <div><span class="stat-label">SUTH Reward</span><span class="stat-value">1.5x</span></div>
+                        <div><span class="stat-label">Market ID</span><span class="stat-value">#1</span></div>
+                    </div>
+                    <div class="trade-buttons">
+                        <button class="btn-market btn-yes" onclick="bet(1, 0)">YES (Buy)</button>
+                        <button class="btn-market btn-no" onclick="bet(1, 1)">NO (Buy)</button>
+                        <button class="btn-market btn-stake" onclick="stakeSuth()">STAKE $SUTH</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // CONTRACT CONFIGURATION
+        const PREDICTION_MARKET_ADDR = "0x1A234678Ebe1DfDc1e81e34D3C27DB28490d74c2";
+        const USDC_ADDR = "0xaFD717461069733CB63644A1497874A196505Bfe";
+        const SUTH_TOKEN_ADDR = "0xB9B956A6F0AD75f5dB0da742c3520b28b90a9935";
+        const STAKING_ADDR = "0x5d3DD9f67618b1500f3a03D66921A67dAe09C298";
+
+        let provider, signer, account;
+
+        async function connectWallet() {
+            if (window.ethereum) {
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                signer = provider.getSigner();
+                account = await signer.getAddress();
+                document.getElementById('wallet-address').innerText = account.substring(0,6) + "..." + account.substring(38);
+                document.getElementById('connectBtn').innerText = "Connected";
+                console.log("Oracle Connected:", account);
+            } else {
+                alert("Please install Metamask to interact with the Prophecies.");
+            }
+        }
+
+        async function bet(marketId, outcome) {
+            if (!signer) return alert("Connect your pouch first!");
+            
+            // 1. Approve USDC first (Mock implementation)
+            const usdcAbi = ["function approve(address spender, uint256 amount) public returns (bool)"];
+            const usdcContract = new ethers.Contract(USDC_ADDR, usdcAbi, signer);
+            
+            try {
+                console.log("Approving collateral...");
+                const txApprove = await usdcContract.approve(PREDICTION_MARKET_ADDR, ethers.utils.parseUnits("10", 6));
+                await txApprove.wait();
+
+                // 2. Call Prediction Market (Buy Shares)
+                // Mock ABI for typical buy function: buy(uint256 marketId, uint8 outcome, uint256 amount)
+                const marketAbi = ["function buy(uint256 marketId, uint8 outcome, uint256 amount) public"];
+                const marketContract = new ethers.Contract(PREDICTION_MARKET_ADDR, marketAbi, signer);
+                
+                console.log("Scribing prophecy on-chain...");
+                const txBet = await marketContract.buy(marketId, outcome, ethers.utils.parseUnits("10", 6));
+                await txBet.wait();
+                alert("Prophecy Bound! View your position in the Pouch.");
+            } catch (err) {
+                console.error(err);
+                alert("The spirits are restless. Transaction failed.");
+            }
+        }
+
+        async function stakeSuth() {
+            if (!signer) return alert("Connect your pouch first!");
+            
+            const suthAbi = ["function approve(address spender, uint256 amount) public returns (bool)"];
+            const stakingAbi = ["function stake(uint256 amount) public"];
+            
+            try {
+                const suthContract = new ethers.Contract(SUTH_TOKEN_ADDR, suthAbi, signer);
+                await suthContract.approve(STAKING_ADDR, ethers.utils.parseEther("100"));
+                
+                const stakingContract = new ethers.Contract(STAKING_ADDR, stakingAbi, signer);
+                await stakingContract.stake(ethers.utils.parseEther("100"));
+                alert("Tokens Staked. Your rewards are accumulating in the Vault.");
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "transactions": [
+    {
+      "rpc": "https://rpc.testnet.soniclabs.com"
+    },
+    {
+      "rpc": "https://rpc.testnet.soniclabs.com"
+    },
+    {
+      "rpc": "https://rpc.testnet.soniclabs.com"
+    },
+    {
+      "rpc": "https://rpc.testnet.soniclabs.com"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "transactions": [
+    {
+      "rpc": "https://rpc.blaze.soniclabs.com"
+    },
+    {
+      "rpc": "https://rpc.blaze.soniclabs.com"
+    }
+  ]
+}

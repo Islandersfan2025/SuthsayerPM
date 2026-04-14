@@ -3,80 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suthsayer | Prediction Market</title>
+    <title>Suthsayer | The Oracle of Sonic</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=MedievalSharp&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     
     <style>
         :root {
-            --dark-red: #580000; --blood-red: #8b0000; --dark-gray: #0d0d0d;
-            --deep-blue: #001a33; --gold: #c5a059; --stone: #2c2c2c; --ssyr-cyan: #00f2ff;
+            --dark-red: #580000;
+            --blood-red: #8b0000;
+            --dark-gray: #0d0d0d;
+            --deep-blue: #001a33;
+            --gold: #c5a059;
+            --stone: #242424;
+            --ssyr-cyan: #00f2ff;
         }
-        body { background-color: var(--dark-gray); color: #d1d1d1; font-family: 'Roboto', sans-serif; background-image: url('https://www.transparenttextures.com/patterns/asfalt-dark.png'); }
-        h1, h2, h3, .nav-link { font-family: 'Cinzel', serif; text-transform: uppercase; letter-spacing: 2px; }
-        .navbar { background: rgba(0,0,0,0.95); border-bottom: 2px solid var(--dark-red); z-index: 1000; }
-        .hero-section { padding: 100px 0 60px; text-align: center; border-bottom: 5px double var(--dark-red); background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1519074063912-ad2fe3f51908?auto=format&fit=crop&q=80&w=1600'); background-size: cover; }
-        .prophecy-box { background: #151515; border: 1px solid var(--stone); border-left: 4px solid var(--blood-red); margin-bottom: 30px; transition: 0.3s; }
+
+        body {
+            background-color: var(--dark-gray);
+            color: #d1d1d1;
+            font-family: 'Roboto', sans-serif;
+            background-image: url('https://www.transparenttextures.com/patterns/asfalt-dark.png');
+            scroll-behavior: smooth;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Cinzel', serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--gold);
+        }
+
+        /* Gothic Vignette Overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 20%, black 90%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: rgba(0,0,0,0.95);
+            border-bottom: 2px solid var(--dark-red);
+            z-index: 1000;
+        }
+        .navbar-brand { 
+            color: var(--gold) !important; 
+            font-weight: bold; 
+            text-shadow: 2px 2px black; 
+            font-family: 'Cinzel';
+        }
+        .nav-link { color: #ccc !important; font-size: 0.85rem; margin: 0 10px; transition: 0.3s; }
+        .nav-link:hover { color: var(--ssyr-cyan) !important; }
+
+        /* Sections */
+        section { padding: 100px 0; border-bottom: 1px solid #222; position: relative; z-index: 5; }
+        
+        .hero-section {
+            padding: 160px 0 100px;
+            text-align: center;
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1519074063912-ad2fe3f51908?auto=format&fit=crop&q=80&w=1600');
+            background-size: cover;
+            border-bottom: 5px double var(--dark-red);
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            color: var(--blood-red);
+            text-shadow: 0 0 20px black, 0 0 10px var(--deep-blue);
+        }
+
+        /* Prophecy/Prediction Box (Polymarket + Bluesky) */
+        .prophecy-box {
+            background: #151515;
+            border: 1px solid var(--stone);
+            border-left: 4px solid var(--blood-red);
+            margin-bottom: 30px;
+            transition: 0.3s;
+        }
+        .prophecy-box:hover {
+            border-color: var(--gold);
+            box-shadow: 0 0 25px rgba(139, 0, 0, 0.2);
+        }
         .bsky-header { padding: 20px; background: rgba(255,255,255,0.02); border-bottom: 1px solid #222; }
         .bsky-handle { font-family: 'MedievalSharp'; color: var(--gold); text-decoration: none; }
-        .market-stats { display: grid; grid-template-columns: repeat(4, 1fr); padding: 15px 20px; background: #0a0a0a; border-bottom: 1px solid var(--stone); text-align: center; }
+        .bsky-text { font-size: 1.1rem; color: #eee; font-style: italic; margin-top: 10px; }
+
+        /* Polymarket Stats Grid */
+        .market-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            padding: 15px 20px;
+            background: #0a0a0a;
+            border-bottom: 1px solid var(--stone);
+            text-align: center;
+        }
         .stat-label { font-size: 0.65rem; color: #666; text-transform: uppercase; display: block; }
-        .stat-value { font-family: 'MedievalSharp'; font-size: 1.1rem; color: #fff; }
+        .stat-value { font-family: 'MedievalSharp'; font-size: 1.2rem; color: #fff; }
+
+        /* Action Buttons */
         .trade-buttons { display: flex; }
         .btn-market { flex: 1; padding: 15px; border: none; font-family: 'Cinzel'; font-weight: bold; transition: 0.2s; }
         .btn-yes { background: #1a3a1a; color: #44ff44; }
         .btn-no { background: #3a1a1a; color: #ff4444; }
         .btn-stake { background: var(--deep-blue); color: var(--ssyr-cyan); border-left: 1px solid var(--stone); }
+        .btn-market:hover { filter: brightness(1.3); }
+
+        /* Roadmap path */
+        .roadmap-item {
+            border-left: 2px solid var(--dark-red);
+            padding-left: 30px;
+            position: relative;
+            margin-bottom: 50px;
+        }
+        .roadmap-item::before {
+            content: ""; position: absolute; left: -11px; top: 0; width: 20px; height: 20px;
+            background: var(--blood-red); border: 2px solid var(--gold); border-radius: 50%;
+        }
+
+        /* Socials & Footer */
+        .social-icon { font-size: 1.5rem; color: var(--gold); text-decoration: none; transition: 0.3s; }
+        .social-icon:hover { color: var(--ssyr-cyan); transform: translateY(-3px); }
+        
+        footer { border-top: 1px solid var(--stone); padding: 60px 0; background: #050505; }
+
         .btn-connect { background: var(--dark-red); color: var(--gold); border: 1px solid var(--gold); font-family: 'MedievalSharp'; }
-        #wallet-address { font-size: 0.7rem; color: var(--gold); }
     </style>
 </head>
 <body>
 
-    <nav class="navbar sticky-top">
-        <div class="container d-flex justify-content-between">
-            <a class="navbar-brand" href="#" style="color:var(--gold)">SUTH$AYER</a>
-            <div class="d-flex align-items-center">
-                <span id="wallet-address" class="me-3"></span>
-                <button id="connectBtn" class="btn btn-connect btn-sm" onclick="connectWallet()">Connect Pouch</button>
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">SUTH$AYER</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#feed">Markets</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#roadmap">Roadmap</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#docs">Tome (Docs)</a></li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <span id="wallet-address" class="me-3 small d-none d-md-block" style="color:var(--gold)"></span>
+                    <button id="connectBtn" class="btn btn-connect btn-sm" onclick="connectWallet()">Connect Pouch</button>
+                </div>
             </div>
         </div>
     </nav>
 
     <header class="hero-section">
         <div class="container">
-            <h1 style="color:var(--blood-red); font-size: 3.5rem;">BEHOLD THE FUTURE</h1>
-            <p class="lead">Powered by Bluesky and Chainlink</p>
+            <h1 class="hero-title">Behold the Future</h1>
+            <p class="lead mb-5 text-light">Built on Sonic Chain. Verified by Chainlink. Born on Bluesky.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="#feed" class="btn btn-danger px-4 py-2 border border-warning" style="font-family:'MedievalSharp'">Enter Markets</a>
+                <a href="#about" class="btn btn-outline-secondary px-4 py-2" style="font-family:'MedievalSharp'">Read the Scrolls</a>
+            </div>
         </div>
     </header>
 
-    <main class="container my-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-9">
-                <div class="prophecy-box">
-                    <div class="bsky-header">
-                        <a href="#" class="bsky-handle">@DeckardCain.bsky.social</a>
-                        <p class="mt-2 italic">"I predict the Sonic Mainnet will process 1M transactions in its first hour. Stake your claim!"</p>
-                    </div>
-                    <div class="market-stats">
-                        <div><span class="stat-label">Odds</span><span class="stat-value">65%</span></div>
-                        <div><span class="stat-label">Liquidity</span><span class="stat-value">10k USDC</span></div>
-                        <div><span class="stat-label">SUTH Reward</span><span class="stat-value">1.5x</span></div>
-                        <div><span class="stat-label">Market ID</span><span class="stat-value">#1</span></div>
-                    </div>
-                    <div class="trade-buttons">
-                        <button class="btn-market btn-yes" onclick="bet(1, 0)">YES (Buy)</button>
-                        <button class="btn-market btn-no" onclick="bet(1, 1)">NO (Buy)</button>
-                        <button class="btn-market btn-stake" onclick="stakeSuth()">STAKE $SUTH</button>
+    <section id="about" class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2>Socially Driven Truth</h2>
+                <p>Suthsayer leverages the decentralized nature of the <strong>AT Protocol</strong> to turn social sentiment into actionable markets. By indexing predictions made directly on Bluesky, we allow users to trade on the news as it breaks.</p>
+                <p>Our <strong>Chainlink Automation</strong> infrastructure acts as a tireless oracle, reading the social firehose to mint new markets and verifying outcomes to settle rewards trustlessly on the <strong>Sonic Network</strong>.</p>
+            </div>
+            <div class="col-lg-6">
+                <div class="p-4 bg-black border border-secondary shadow-lg">
+                    <h4 class="text-info mb-3">Protocol Architecture</h4>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">⚡ <strong>Sonic EVM:</strong> Sub-second transaction finality.</li>
+                        <li>🦋 <strong>Bluesky:</strong> Decentralized market creation via posts.</li>
+                        <li class="mt-2">🔗 <strong>Chainlink:</strong> Automated market settlement.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="feed" class="bg-black">
+        <div class="container">
+            <h2 class="text-center mb-5">Active Prophecies</h2>
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="prophecy-box">
+                        <div class="bsky-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a href="#" class="bsky-handle">@Deckard_Cain.bsky.social</a>
+                                <span class="text-muted small">8m ago</span>
+                            </div>
+                            <p class="bsky-text">"I predict the Sonic Testnet will hit 2,000 TPS before the weekend. Stake your ruins!"</p>
+                        </div>
+                        <div class="market-stats">
+                            <div><span class="stat-label">Odds</span><span class="stat-value">65%</span></div>
+                            <div><span class="stat-label">Volume</span><span class="stat-value">14.2k $SSYR</span></div>
+                            <div><span class="stat-label">Liquidity</span><span class="stat-value">$8,400</span></div>
+                            <div><span class="stat-label">Ends In</span><span class="stat-value text-danger">3D : 14H</span></div>
+                        </div>
+                        <div class="trade-buttons">
+                            <button class="btn-market btn-yes" onclick="bet(1, 0)">YES (Buy)</button>
+                            <button class="btn-market btn-no" onclick="bet(1, 1)">NO (Buy)</button>
+                            <button class="btn-market btn-stake" onclick="stakeSuth()">STAKE $SSYR</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </main>
+    </section>
+
+    <section id="roadmap" class="container">
+        <h2 class="text-center mb-5">Roadmap of the Oracle</h2>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="roadmap-item">
+                    <h4 style="color:var(--ssyr-cyan)">Phase I: The Awakening</h4>
+                    <p>Genesis launch on Sonic Testnet. Bluesky indexer bot v1.0 activation. $SSYR staking contract deployment.</p>
+                </div>
+                <div class="roadmap-item">
+                    <h4>Phase II: The Gathering</h4>
+                    <p>Community governance rollout. Expansion of Chainlink Automation to complex web oracles. Mobile-friendly social trading app.</p>
+                </div>
+                <div class="roadmap-item">
+                    <h4>Phase III: The Omniscience</h4>
+                    <p>Full migration to Sonic Mainnet. AI-assisted prophecy evaluation. Cross-chain prophecy bridges.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer id="docs">
+        <div class="container text-center">
+            <h3 class="mb-4">Join the Council</h3>
+            <div class="d-flex justify-content-center gap-5 mb-5">
+                <a href="https://x.com" class="social-icon">𝕏</a>
+                <a href="https://t.me" class="social-icon">Telegram</a>
+                <a href="https://bsky.app" class="social-icon">Bluesky</a>
+                <a href="#" class="social-icon">Tome (Docs)</a>
+            </div>
+            <p class="small text-muted">Suthsayer Engine © 2026. Built for Sonic Chain ID: 14601.</p>
+            <p class="x-small text-secondary mt-2">Predictions are etched in stone. Trade at your own peril.</p>
+        </div>
+    </footer>
 
     <script>
-        // CONTRACT CONFIGURATION
+        // Contract Addresses
         const PREDICTION_MARKET_ADDR = "0x1A234678Ebe1DfDc1e81e34D3C27DB28490d74c2";
         const USDC_ADDR = "0xaFD717461069733CB63644A1497874A196505Bfe";
         const SUTH_TOKEN_ADDR = "0xB9B956A6F0AD75f5dB0da742c3520b28b90a9935";
@@ -92,56 +268,39 @@
                 account = await signer.getAddress();
                 document.getElementById('wallet-address').innerText = account.substring(0,6) + "..." + account.substring(38);
                 document.getElementById('connectBtn').innerText = "Connected";
-                console.log("Oracle Connected:", account);
-            } else {
-                alert("Please install Metamask to interact with the Prophecies.");
             }
         }
 
         async function bet(marketId, outcome) {
             if (!signer) return alert("Connect your pouch first!");
-            
-            // 1. Approve USDC first (Mock implementation)
             const usdcAbi = ["function approve(address spender, uint256 amount) public returns (bool)"];
             const usdcContract = new ethers.Contract(USDC_ADDR, usdcAbi, signer);
             
             try {
-                console.log("Approving collateral...");
                 const txApprove = await usdcContract.approve(PREDICTION_MARKET_ADDR, ethers.utils.parseUnits("10", 6));
                 await txApprove.wait();
 
-                // 2. Call Prediction Market (Buy Shares)
-                // Mock ABI for typical buy function: buy(uint256 marketId, uint8 outcome, uint256 amount)
                 const marketAbi = ["function buy(uint256 marketId, uint8 outcome, uint256 amount) public"];
                 const marketContract = new ethers.Contract(PREDICTION_MARKET_ADDR, marketAbi, signer);
-                
-                console.log("Scribing prophecy on-chain...");
                 const txBet = await marketContract.buy(marketId, outcome, ethers.utils.parseUnits("10", 6));
                 await txBet.wait();
-                alert("Prophecy Bound! View your position in the Pouch.");
-            } catch (err) {
-                console.error(err);
-                alert("The spirits are restless. Transaction failed.");
-            }
+                alert("Prophecy Bound!");
+            } catch (err) { console.error(err); }
         }
 
         async function stakeSuth() {
-            if (!signer) return alert("Connect your pouch first!");
-            
-            const suthAbi = ["function approve(address spender, uint256 amount) public returns (bool)"];
-            const stakingAbi = ["function stake(uint256 amount) public"];
-            
+            if (!signer) return alert("Connect your pouch!");
             try {
+                const suthAbi = ["function approve(address spender, uint256 amount) public returns (bool)"];
+                const stakingAbi = ["function stake(uint256 amount) public"];
                 const suthContract = new ethers.Contract(SUTH_TOKEN_ADDR, suthAbi, signer);
                 await suthContract.approve(STAKING_ADDR, ethers.utils.parseEther("100"));
-                
                 const stakingContract = new ethers.Contract(STAKING_ADDR, stakingAbi, signer);
                 await stakingContract.stake(ethers.utils.parseEther("100"));
-                alert("Tokens Staked. Your rewards are accumulating in the Vault.");
-            } catch (err) {
-                console.error(err);
-            }
+                alert("Tokens Staked.");
+            } catch (err) { console.error(err); }
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
